@@ -2,10 +2,13 @@ package lua_debugger
 
 import (
 	"context"
-	"github.com/edolphin-ydf/gopherlua-debugger/proto"
-	lua "github.com/yuin/gopher-lua"
 	"sync"
+	"sync/atomic"
 	"time"
+
+	lua "github.com/yuin/gopher-lua"
+
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 )
 
 func LuaError(L *lua.LState, msg string) int {
@@ -194,4 +197,17 @@ func (f *Facade) OnEvalResult(ctx *EvalContext) {
 	}
 
 	f.t.Send(proto.MsgIdEvalRsp, rsp)
+}
+
+func (f *Facade) Close() error {
+	if f.t != nil {
+		// It is safe to not do CaS here because we only have one
+		// debugger instance that holds this
+		// openConn "lock" at any point of time.
+		atomic.StoreInt32(&openConn, 0)
+		f.states = nil
+		return f.t.Close()
+	}
+
+	return nil
 }

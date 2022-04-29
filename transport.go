@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 	"io"
 	"log"
 	"net"
 	"strconv"
+
+	"github.com/edolphin-ydf/gopherlua-debugger/proto"
 )
 
 type Transport struct {
@@ -85,4 +86,12 @@ func (t *Transport) Send(cmd int, msg interface{}) {
 	if _, err := io.Copy(t.c, &buf); err != nil {
 		log.Println("send msg fail:", string(data), err)
 	}
+}
+
+func (t *Transport) Close() error {
+	if t.c != nil {
+		return t.c.Close()
+	}
+
+	return nil
 }
